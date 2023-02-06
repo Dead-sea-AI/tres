@@ -1,3 +1,28 @@
 /* @import './base.css'; */
 
+.setup > div {
+  padding-bottom: 20px;
+}
 
+.player {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+.modal {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: grey;
+  opacity: 0.5;
+  z-index: 10;
+}
+
+.notification {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  color: red;
+}
