@@ -1,6 +1,6 @@
 <template>
+  <h1>Tres</h1>
   <div class="setup">
-    <h1>Tres</h1>
     <div class="settings-input">
       <input
         type="text"
@@ -9,44 +9,40 @@
         v-model="newPlayer"
       />
       <button @click="addPlayer">add player</button>
-    </div>
-    <div v-for="(player, index) in players" :key="player.id">
-      <div class="player">
-        <div>{{ player.name }}:</div>
-        <div v-if="!player.isEditing">{{ player.score }}</div>
-        <input
-          v-else
-          @keyup.enter="editingDone(player)"
-          type="number"
-          placeholder="Score"
-          v-model="player.score"
-        />
-        <input
-          v-model="additionalScore"
-          type="number"
-          placeholder="Enter score"
-          @keyup.enter="addScore(player)"
-        />
-        <button @click="addScore(player)">add score</button>
+      <div class="player" v-for="(player, index) in players" :key="player.id">
+        <div class="player-options">
+          <div>{{ player.name }}:</div>
+          <div v-if="!player.isEditing">{{ player.score }}</div>
+          <input
+            v-else
+            @keyup.enter="editingDone(player)"
+            type="number"
+            placeholder="Score"
+            v-model="player.score"
+          />
+          <input
+            v-model="player.earnedScore"
+            type="number"
+            placeholder="Enter score"
+            @keyup.enter="addScore(player)"
+          />
+
+          <vue-feather @click="addScore(player)" type="plus"></vue-feather>
+          <vue-feather
+            @click="
+              removePlayer(index);
+              notify();
+            "
+            type="trash-2"
+          ></vue-feather>
+          <vue-feather type="edit" @click="editScore(player)"></vue-feather>
+        </div>
       </div>
-      <button
-        @click="
-          removePlayer(index);
-          notify();
-        "
-      >
-        remove player
-      </button>
-      <button @click="editScore(player)">edit score</button>
+      <div>
+        <button @click="finishRound()">add to everyone</button>
+      </div>
     </div>
-    <button
-      @click="
-        addToAll();
-        increment();
-      "
-    >
-      add to everyone
-    </button>
+
     <div class="settings-input">
       <input
         v-model="amount"
@@ -55,12 +51,13 @@
         @keyup.enter="setMaxScore"
       />
       <button @click="setMaxScore">set threshold</button>
+      <div>Maximum points: {{ maxScore }}</div>
+      <button @click="newGame">new game</button>
+      <button @click="clearGame">clear game</button>
     </div>
-    <div>Maximum points: {{ maxScore }}</div>
-    <div>{{ round }}</div>
-    <button @click="newGame">new game</button>
-    <button @click="clearGame">clear game</button>
+    <div class="round">{{ round }}</div>
   </div>
+
   <!-- <div v-if="showModal" class="modal">
     <div class="window">
       <span v-if="player.isWinner">{{ player.name }} won!</span>
@@ -70,8 +67,11 @@
   <div v-if="notification" class="notification">
     <span>Player deleted</span>
   </div>
-  <ModalWindow v-if="isShownGameResult">
+  <ModalWindow v-if="gameOver">
     <button @click="toggleModal">close</button>
+    <div style="color: black" v-for="(winner, index) in winners" :key="index">
+      <div>Winner is:{{ winner.name }}: {{ winner.score }}</div>
+    </div>
   </ModalWindow>
 </template>
 
@@ -85,9 +85,9 @@ export default {
       amount: "",
       maxScore: 500,
       round: 1,
-      additionalScore: "",
       notification: false,
-      isShownGameResult: true,
+      gameOver: false,
+      winners: [],
     };
   },
   methods: {
@@ -97,8 +97,9 @@ export default {
         id: this.id++,
         name: this.newPlayer,
         score: 0,
+        earnedScore: "",
         isEditing: false,
-        isWinner: false,
+        isLoser: false,
       });
       this.newPlayer = "";
     },
@@ -120,27 +121,35 @@ export default {
     editingDone(player) {
       player.isEditing = false;
       if (player.score >= this.maxScore) {
-        player.isWinner = true;
-        this.showModal;
+        player.isLoser = true;
+        this.toggleModal();
+        this.pushToWin();
       }
     },
 
     addScore(player) {
-      if (player.score + this.additionalScore < 0);
-      else if (player.score + this.additionalScore >= this.maxScore) {
-        player.score += this.additionalScore;
-        player.isWinner = true;
-        this.showModal = true;
-      } else player.score += this.additionalScore;
-      this.additionalScore = "";
+      if (player.score + player.earnedScore < 0);
+      else if (player.score + player.earnedScore >= this.maxScore) {
+        player.score += player.earnedScore;
+        player.isLoser = true;
+        this.toggleModal();
+        this.pushToWin();
+      } else player.score += player.earnedScore;
+      player.earnedScore = "";
     },
+
     setMaxScore() {
       if (this.amount <= 0) return;
       this.maxScore = this.amount;
       this.amount = "";
     },
 
-    increment() {
+    finishRound() {
+      this.players = this.players.map((player) => {
+        player.score += player.earnedScore;
+        player.earnedScore = "";
+        return player;
+      });
       this.round++;
     },
 
@@ -155,14 +164,6 @@ export default {
       // }
     },
 
-    addToAll() {
-      this.players = this.players.map((player) => {
-        player.score += this.additionalScore;
-        return player;
-      });
-      this.additionalScore = "";
-    },
-
     clearGame() {
       this.players = [];
       this.maxScore = 500;
@@ -170,7 +171,17 @@ export default {
     },
 
     toggleModal() {
-      this.isShownGameResult = !this.isShownGameResult;
+      this.gameOver = !this.gameOver;
+    },
+
+    pushToWin() {
+      this.winners = this.players.filter((player) => !player.isLoser);
+    },
+
+    sorter(x, y) {
+      if (x > y) return -1;
+      if (x == y) return 0;
+      return 1;
     },
   },
 };

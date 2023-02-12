@@ -1,15 +1,6 @@
 <template>
   <div class="interface">
-    <!-- <table>
-      <tr>
-        <th>Name</th>
-        <th>Score</th>
-      </tr>
-      <tr>
-        <th>Andrew</th>
-        <th>228</th>
-      </tr>
-    </table> -->
+    <button>remind me card value</button>
   </div>
 </template>
 
