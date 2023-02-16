@@ -25,6 +25,24 @@ export default {};
 }
 
 .modal-content {
+  text-align: center;
   background-color: #fff;
+  border-radius: 20px;
+  padding: 30px 40px;
+  position: relative;
+  color: #2a2e48;
+}
+
+.modal-content i {
+  color: #000;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  border: 1px solid #fff;
+}
+
+i:hover {
+  border: 1px solid #2a2e48;
 }
 </style>

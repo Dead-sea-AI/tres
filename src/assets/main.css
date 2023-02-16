@@ -63,13 +63,13 @@ button:hover {
   gap: 5px;
 }
 
-i {
+.settings-input i {
   cursor: pointer;
   padding: 5px;
   border: 1px solid #2a2e48;
 }
 
-i:hover {
+.settings-input i:hover {
   border: 1px solid #fff;
 }
 
