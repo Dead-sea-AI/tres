@@ -9,37 +9,39 @@
         v-model="newPlayer"
       />
       <button @click="addPlayer">add player</button>
-      <div class="player" v-for="(player, index) in players" :key="player.id">
+      <div class="player" v-for="player in players" :key="player.id">
         <div class="player-options">
           <table>
             <tr>
               <td>{{ player.name }}:</td>
               <td>{{ player.score }}</td>
-              <td></td>
+              <td>
+                <input
+                  v-if="!player.isEditing"
+                  v-model="player.earnedScore"
+                  type="number"
+                  placeholder="Enter score and press next round to add"
+                />
+                <input
+                  v-else
+                  @keyup.enter="editingDone(player)"
+                  type="number"
+                  placeholder="Edit score and press enter to submit"
+                  v-model="player.earnedScore"
+                />
+              </td>
+              <td>
+                <vue-feather
+                  @click="toggleModal('delete-player', player.id)"
+                  type="trash-2"
+                ></vue-feather>
+                <vue-feather
+                  type="edit"
+                  @click="editScore(player)"
+                ></vue-feather>
+              </td>
             </tr>
           </table>
-          <input
-            v-if="!player.isEditing"
-            v-model="player.earnedScore"
-            type="number"
-            placeholder="Enter score and press next round to add"
-          />
-          <input
-            v-else
-            @keyup.enter="editingDone(player)"
-            type="number"
-            placeholder="Edit score and press enter to submit"
-            v-model="player.earnedScore"
-          />
-
-          <vue-feather
-            @click="
-              suspend();
-              notify();
-            "
-            type="trash-2"
-          ></vue-feather>
-          <vue-feather type="edit" @click="editScore(player)"></vue-feather>
         </div>
       </div>
       <div>
@@ -56,7 +58,7 @@
       />
       <button @click="setMaxScore">set threshold</button>
       <div>Maximum points: {{ maxScore }}</div>
-      <button @click="restart = true">new game</button>
+      <button @click="activeModalName = 'test'">new game</button>
       <button @click="clearGame">clean restart</button>
     </div>
     <div class="round">{{ round }}</div>
@@ -65,7 +67,7 @@
   <div v-if="notification" class="notification">
     <span>Player deleted</span>
   </div>
-  <ModalWindow v-if="gameOver">
+  <!-- <ModalWindow v-if="gameOver">
     <vue-feather @click="toggleModal" type="x" />
     <div v-for="(winner, index) in winners" :key="index">
       <h2>Winners</h2>
@@ -83,6 +85,28 @@
     <h2>Do you want to clear score and start a new game?</h2>
     <button @click="newGame">yes</button>
     <button @click="restart = false">yesn`t`</button>
+  </ModalWindow> -->
+
+  <ModalWindow v-if="!!activeModalName">
+    <template v-if="activeModalName === 'game-over'">
+      <div v-for="(winner, index) in winners" :key="index">
+        <h2>Winners</h2>
+        <div>{{ winner.name }}: {{ winner.score }}</div>
+        <h2>Loser</h2>
+        <div>{{ loser.name }}: {{ loser.score }}</div>
+        <vue-feather @click="toggleModal" type="x" />
+      </div>
+    </template>
+    <template v-else-if="activeModalName === 'delete-player'">
+      <h2>Remove player?</h2>
+      <button @click="removePlayer()">yes</button>
+      <button @click="toggleModal()">!yes</button>
+    </template>
+    <template v-else>
+      <h2>Do you want to clear score and start a new game?</h2>
+      <button @click="newGame">yes</button>
+      <button @click="toggleModal()">yesn`t</button>
+    </template>
   </ModalWindow>
 </template>
 
@@ -102,6 +126,8 @@ export default {
       restart: false,
       winners: [],
       loser: [],
+      activeElementId: null,
+      activeModalName: "",
     };
   },
 
@@ -119,20 +145,11 @@ export default {
       this.newPlayer = "";
     },
 
-    suspend() {
-      this.upForDeletion = true;
-    },
-
-    removePlayer(index) {
-      this.players.splice(index, 1);
-      this.upForDeletion = false;
-    },
-
-    notify() {
-      this.notification = true;
-      setInterval(() => {
-        this.notification = false;
-      }, 1500);
+    removePlayer() {
+      this.players = this.players.filter(
+        (player) => player.id !== this.activeElementId
+      );
+      this.toggleModal();
     },
 
     editScore(player) {
@@ -145,7 +162,7 @@ export default {
       player.earnedScore = "";
       if (player.score >= this.maxScore) {
         player.isLoser = true;
-        this.toggleModal();
+        this.activeModalName = "game-over";
         this.pushToWin();
       }
     },
@@ -163,7 +180,7 @@ export default {
         player.earnedScore = "";
         if (player.score + player.earnedScore >= this.maxScore) {
           player.isLoser = true;
-          this.toggleModal();
+          this.toggleModal("game-over");
           this.pushToWin();
         }
         return player;
@@ -177,7 +194,7 @@ export default {
         player.score = 0;
         return player;
       });
-      this.restart = false;
+      this.toggleModal();
     },
 
     clearGame() {
@@ -186,13 +203,14 @@ export default {
       this.round = 1;
     },
 
-    toggleModal() {
-      this.gameOver = !this.gameOver;
-    },
-
     pushToWin() {
       this.winners = this.players.filter((player) => !player.isLoser);
       this.loser = this.players.filter((player) => player.isLoser);
+    },
+
+    toggleModal(modalName = "", activeElementId = null) {
+      this.activeModalName = modalName;
+      this.activeElementId = activeElementId;
     },
 
     // sorter(x, y) {
