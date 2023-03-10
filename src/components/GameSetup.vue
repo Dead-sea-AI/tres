@@ -89,6 +89,7 @@
       <button @click="toggleModal()">yesn`t</button>
     </template>
   </ModalWindow>
+  <button @click="test">test</button>
 </template>
 
 <script>
@@ -192,6 +193,10 @@ export default {
     toggleModal(modalName = "", activeElementId = null) {
       this.activeModalName = modalName;
       this.activeElementId = activeElementId;
+    },
+
+    test() {
+      this.$store.commit("notify", { text: "test", type: "success" });
     },
   },
 };
