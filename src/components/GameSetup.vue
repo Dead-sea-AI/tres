@@ -67,25 +67,6 @@
   <div v-if="notification" class="notification">
     <span>Player deleted</span>
   </div>
-  <!-- <ModalWindow v-if="gameOver">
-    <vue-feather @click="toggleModal" type="x" />
-    <div v-for="(winner, index) in winners" :key="index">
-      <h2>Winners</h2>
-      <div>{{ winner.name }}: {{ winner.score }}</div>
-      <h2>Loser</h2>
-      <div>{{ loser.name }}: {{ loser.score }}</div>
-    </div>
-  </ModalWindow>
-  <ModalWindow v-if="upForDeletion">
-    <h2>Remove player?</h2>
-    <button @click="removePlayer(index)">yes</button>
-    <button @click="upForDeletion = false">!yes</button>
-  </ModalWindow>
-  <ModalWindow v-if="restart">
-    <h2>Do you want to clear score and start a new game?</h2>
-    <button @click="newGame">yes</button>
-    <button @click="restart = false">yesn`t`</button>
-  </ModalWindow> -->
 
   <ModalWindow v-if="!!activeModalName">
     <template v-if="activeModalName === 'game-over'">
@@ -162,7 +143,7 @@ export default {
       player.earnedScore = "";
       if (player.score >= this.maxScore) {
         player.isLoser = true;
-        this.activeModalName = "game-over";
+        this.toggleModal("game-over");
         this.pushToWin();
       }
     },
@@ -212,12 +193,6 @@ export default {
       this.activeModalName = modalName;
       this.activeElementId = activeElementId;
     },
-
-    // sorter(x, y) {
-    //   if (x > y) return -1;
-    //   if (x == y) return 0;
-    //   return 1;
-    // },
   },
 };
 </script>
