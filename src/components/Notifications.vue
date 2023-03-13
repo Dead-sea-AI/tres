@@ -26,5 +26,8 @@ export default {
 .notifications div {
   color: #000;
   background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  font-size: 20px;
 }
 </style>

@@ -23,7 +23,7 @@ const store = createStore({
       setTimeout(() => {
         const idx = state.notifications.indexOf((nigga) => nigga.id == id);
         state.notifications.splice(idx, 1);
-      }, 1000);
+      }, 1500);
     },
   },
 });

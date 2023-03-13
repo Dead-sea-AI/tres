@@ -58,24 +58,22 @@
       />
       <button @click="setMaxScore">set threshold</button>
       <div>Maximum points: {{ maxScore }}</div>
-      <button @click="activeModalName = 'test'">new game</button>
-      <button @click="clearGame">clean restart</button>
+      <button @click="activeModalName = 'restart-game'">new game</button>
+      <button @click="activeModalName = 'clear'">clean restart</button>
     </div>
     <div class="round">{{ round }}</div>
   </div>
 
-  <div v-if="notification" class="notification">
-    <span>Player deleted</span>
-  </div>
-
   <ModalWindow v-if="!!activeModalName">
     <template v-if="activeModalName === 'game-over'">
+      <h2>Winners</h2>
       <div v-for="(winner, index) in winners" :key="index">
-        <h2>Winners</h2>
         <div>{{ winner.name }}: {{ winner.score }}</div>
-        <h2>Loser</h2>
+        <vue-feather @click="toggleModal()" type="x" />
+      </div>
+      <h2>Loser</h2>
+      <div v-for="(loser, index) in loser" :key="index">
         <div>{{ loser.name }}: {{ loser.score }}</div>
-        <vue-feather @click="toggleModal" type="x" />
       </div>
     </template>
     <template v-else-if="activeModalName === 'delete-player'">
@@ -83,13 +81,17 @@
       <button @click="removePlayer()">yes</button>
       <button @click="toggleModal()">!yes</button>
     </template>
-    <template v-else>
+    <template v-else-if="activeModalName === 'restart-game'">
       <h2>Do you want to clear score and start a new game?</h2>
       <button @click="newGame">yes</button>
       <button @click="toggleModal()">yesn`t</button>
     </template>
+    <template v-else>
+      <h2>Do you want to reset score and remove all existing players?</h2>
+      <button @click="clearGame">yes</button>
+      <button @click="toggleModal()">no</button>
+    </template>
   </ModalWindow>
-  <button @click="test">test</button>
 </template>
 
 <script>
@@ -102,10 +104,6 @@ export default {
       amount: "",
       maxScore: 500,
       round: 1,
-      notification: false,
-      gameOver: false,
-      upForDeletion: false,
-      restart: false,
       winners: [],
       loser: [],
       activeElementId: null,
@@ -132,6 +130,7 @@ export default {
         (player) => player.id !== this.activeElementId
       );
       this.toggleModal();
+      this.$store.commit("notify", { text: "player deleted", type: "success" });
     },
 
     editScore(player) {
@@ -146,11 +145,15 @@ export default {
         player.isLoser = true;
         this.toggleModal("game-over");
         this.pushToWin();
+        this.$store.commit("notify", {
+          text: "The game is over",
+          type: "success",
+        });
       }
     },
 
     setMaxScore() {
-      if (this.amount <= 0) return;
+      if (this.amount <= 200 || this.amount > 1000) return;
       this.maxScore = this.amount;
       this.amount = "";
     },
@@ -164,6 +167,10 @@ export default {
           player.isLoser = true;
           this.toggleModal("game-over");
           this.pushToWin();
+          this.$store.commit("notify", {
+            text: "The game is over",
+            type: "success",
+          });
         }
         return player;
       });
@@ -176,13 +183,19 @@ export default {
         player.score = 0;
         return player;
       });
+      this.winners = [];
+      this.loser = [];
       this.toggleModal();
+      this.$store.commit("notify", { text: "new game", type: "success" });
     },
 
     clearGame() {
       this.players = [];
+      this.winners = [];
+      this.loser = [];
       this.maxScore = 500;
       this.round = 1;
+      this.toggleModal();
     },
 
     pushToWin() {
@@ -193,10 +206,6 @@ export default {
     toggleModal(modalName = "", activeElementId = null) {
       this.activeModalName = modalName;
       this.activeElementId = activeElementId;
-    },
-
-    test() {
-      this.$store.commit("notify", { text: "test", type: "success" });
     },
   },
 };
