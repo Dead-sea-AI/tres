@@ -196,6 +196,10 @@ export default {
       this.maxScore = 500;
       this.round = 1;
       this.toggleModal();
+      this.$store.commit("notify", {
+        text: "all parameters reset",
+        type: "success",
+      });
     },
 
     pushToWin() {
